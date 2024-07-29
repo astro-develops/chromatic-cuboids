@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>CHROMATIC QUADRILATERALS 3D</title>
+
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        #canvas-3d, #canvas-2d {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+        }
+    </style>
+
+    <!-- The 3D Library -->
+    <script src="https://cdn.jsdelivr.net/gh/bhavjitAlt/threejs/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+    
+</head>
+<body>
+
+    <canvas id="canvas-3d"></canvas>
+    <canvas id="canvas-2d"></canvas>
+
+
+    <script>
+{
+    // canvases
+    const canvas3d = document.getElementById("canvas-3d");
+    const canvas2d = document.getElementById("canvas-2d");
+
+    // set dimensions
+    canvas3d.width = canvas2d.width = window.innerWidth;
+    canvas3d.height = canvas2d.height = window.innerHeight;
+
+    // setup 3.js stuff
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        canvas: canvas3d
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    // So that each user can look different
+    const SKINS = [
+        new THREE.MeshBasicMaterial({ color: 0x00ff00 }),
+    ];
+
+    // All other cubes are instances of this geometry
+    const CUBE = new THREE.BoxGeometry(1, 1, 1);
+
+    const PLAYERS = [];
+
+    const LEVELS = [
+      [
+        "               ",
+        "       1       ",
+        "       0       ",
+        "      000      ",
+        "0000       0000",
+        "              0",
+        "     0  0000  0",
+        "           0 00",
+        "0     0    0  0",
+        "00    0    00 0",
+        "      000  0  0",
+        "   1       0 00",
+        " 000000 0000  0",
+        "              0",
+        "000000000000000"
+      ]  
+    ];
+    
+    class User {
+        x; y; z;
+        xVel = 0; yVel = 0; zVel = 0;
+        thetaX = 0;
+        thetaY = 0;
+        skin;
+        mesh;
+        isClient = false;
+        
+        constructor(x, y, z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+
+            this.skin = SKINS[0];
+            this.mesh = new THREE.Mesh(CUBE, this.skin);
+
+            scene.add(this.mesh);
+        }
+
+        move() {
+            if (this.isClient) {
+                // foreward
+                if (keys["w"]) {
+                    user.xVel = sin(user.yTheta) * user.speed;
+                    user.zVel = cos(user.yTheta) * user.speed;
+                }
+        
+                // backward
+                if (keys["s"]) {
+                    user.xVel = -sin(user.yTheta) * user.speed;
+                    user.zVel = -cos(user.yTheta) * user.speed;
+                }
+        
+                // left
+                if (keys["a"]) {
+                    user.xVel = sin(user.yTheta - 90) * user.speed;
+                    user.zVel = cos(user.yTheta - 90) * user.speed;
+                }
+        
+                // right
+                if (keys["d"]) {
+                    user.xVel = -sin(user.yTheta - 90) * user.speed;
+                    user.zVel = -cos(user.yTheta - 90) * user.speed;
+                }
+        
+                user.x += user.xVel * secondsFromPrevFram;
+                user.z += user.zVel * secondsFromPrevFram;
+            }
+        }
+
+        update() {
+            this.mesh.position.x = this.x;
+            this.mesh.position.y = this.y;
+            this.mesh.position.z = this.z;
+        }
+    }
+
+    const keys = {};
+    window.keys = keys;//debug
+    document.body.addEventListener("keyup", (e) => {
+        keys[e.key] = true;
+    });
+
+    document.body.addEventListener("keydown", (e) => {
+        keys[e.key] = false;
+    });
+    
+    let user = new User(0, 0, 0);
+    user.isClient = true;
+    window.user = user; //debugging
+    PLAYERS.push(user);
+
+    let level = [];
+
+    // generate level
+    for (let z = 0; z < LEVELS[0].length; z++) {
+        for (let x = 0; x < LEVELS[0][z].length; x++) {
+            let ch = LEVELS[0][z][x];
+            switch (ch) {
+                case "0": {
+                    let voxel = new THREE.InstancedMesh(CUBE, SKINS[0]);
+                    voxel.position.x = x;
+                    voxel.position.y = 0;
+                    voxel.position.z = z;
+                    level.push(voxel);
+                    break;
+                }
+            }
+        }
+    }
+
+    
+    
+    camera.position.z = 5;
+    
+    function drawLoop() {
+    	// cube.rotation.x += 0.01;
+    	// cube.rotation.y += 0.01;
+
+        
+
+        for (let i = 0; i < PLAYERS.length; i++) {
+            PLAYERS[i].move();
+            PLAYERS[i].update();
+        }
+    
+    	renderer.render(scene, camera);
+
+        requestAnimationFrame(drawLoop);
+    }
+  
+    drawLoop();
+}
+    </script>
+
+</body>
+</html>

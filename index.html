@@ -2,15 +2,20 @@
 <html>
 <!--
 
+    CHROMATIC QUADRILATERALS 3D
+    Authors: VExcess, Astro, First
+
     Credits:
         Rocket Graphic: https://www.khanacademy.org/computer-programming/i/5437326180794368
-        UFO Graphic: https://www.khanacademy.org/computer-programming/i/6204162995863552
-        TBNRBeast Galaxy Graphic: https://www.khanacademy.org/computer-programming/i/4870333859315712
+        Innerflame - UFO Graphic: https://www.khanacademy.org/computer-programming/i/6204162995863552
+        TBNRBeast - Galaxy Graphic: https://www.khanacademy.org/computer-programming/i/4870333859315712
+        Music: https://www.midiworld.com/files/2339/
+        WinstonWinner000 character: https://www.khanacademy.org/computer-programming/spin-off-of-khan-academy-chromatic-quadrilaterals-character-contest/6137630311366656
     
 -->
 <head>
     <meta charset="utf-8">
-    <title>CHROMATIC QUADRILATERALS 3D</title>
+    <title>CHROMATIC CUBOIDS 3D</title>
 
     <style>
         body {
@@ -22,62 +27,95 @@
             position: absolute;
             left: 0px;
             top: 0px;
+            z-index: 1;
         }
 
         #gameScreen {
           position: absolute;
-          z-index: 999;
-          top: 100px;
+          background-color: pink;
+          top: 0;
           width: 100%;
           text-align: center;
+          z-index: 1000;
+          height: 100vh;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-direction: column;
         }
 
-      #gameScreen h1 {
-        color: white;
-      }
-
-      input {
-        color: black;
-        margin: .2rem;
-        padding: .5rem;
-        outline: none;
-        background: none;
-        background-color: rgba(158, 158, 158, .8);
-        border: 3px solid black;
-        border-radius: 999px;
-        text-align: center;
-      }
-
-      input:focus {
-        
-      }
+        #gameScreen h1 {
+          color: white;
+        }
+  
+        #title {
+          font-family: arial;
+        }
+  
+        input {
+          color: black;
+          margin: .2rem;
+          padding: .5rem;
+          outline: none;
+          background: none;
+          background-color: rgba(158, 158, 158, .8);
+          border: 3px solid black;
+          border-radius: 999px;
+          text-align: center;
+        }
+  
+        ::placeholder {
+          color: black;
+        }
+  
+        button {
+          padding: .5rem 2.5rem;
+          font-size: 1.2em;
+          border-radius: 999px;
+          color: rgb(0, 247, 255);
+          background: none;
+          border: 2px solid rgba(0, 247, 255, .8);
+          box-shadow: 0 0 10px 2px rgba(0, 247, 255, .8);
+          text-shadow: 0 0 20px rgba(0, 247, 255);
+        }
+  
+        button:hover {
+          cursor: pointer;
+          scale: 1.2;
+        }
 
     </style>
 
     <!-- The 3D Library -->
     <script src="https://cdn.jsdelivr.net/gh/bhavjitAlt/threejs/three.min.js"></script>
+    
     <!-- The Physics Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+    
     <!-- The 2D Library -->
     <script src="https://cdn.jsdelivr.net/gh/vExcess/Drawlite@main/drawlite.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/vExcess/Drawlite@main/drawlite-touch.js"></script>
+    
+    <!-- The Audio Library -->
+    <script src="https://cdn.jsdelivr.net/gh/vExcess/libraries@main/webaudio-tinysynth.js"></script>
+    
     <!-- The Networking Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.js"></script>
 </head>
 <body>
 
+    <div id="gameScreen">  
+        
+        <h1 id="title">CHROMATIC CUBOIDS 3D</h1>
+        <input id="usernameInput" placeholder="username"><br><br>
+        <button id="startBtn">Start!</button>
+        
+    </div> 
+  
     <canvas id="canvas-3d"></canvas>
     <canvas id="canvas-2d"></canvas>
-  
-    <div id="gameScreen">  
-      <h1 id="title">CHROMATIC QUADRILATERALS 3D</h1>
-      <form>
-          <input placeholder="username" type="text">
-          <button id="startBtn">Start!</button>
-      </form>
-    </div>
 
-    <script src="./CDN/server.js"></script>
+    <script src="./CDN/music.js" type='module'></script>
     <script src='./CDN/index.js' type='module'></script>
 
 </body>

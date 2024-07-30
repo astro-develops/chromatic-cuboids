@@ -31,92 +31,200 @@ let mouseSensitivity = 0.45;
 
 // create skybox
 
-let skyGraphic = createGraphics(500, 500);
-skyGraphic.pushMatrix();
-    skyGraphic.translate(0, 30);
-    skyGraphic.scale(width/400);
+let skyGraphic = createGraphics(1000, 1000);
+let roofGraphic = createGraphics(1000, 1000);
+let skyBackground;
+let stars = [];
+function drawClouds(ctx) {
+    ctx.autoUpdateDynamics();
+    ctx.loadPixels();
+    let pixels = ctx.get.imageData.data;
+    for (let i = 0; i < pixels.length; i += 4) {
+        let x = (i >> 2) % width;
+        let y = ((i >> 2) / width) | 0;
+
+        if (x > width / 2) x = width - x;
+        
+        let b = perlin.get(x / 200, y / 100) * 25;
+        pixels[i] += b;
+        pixels[i+1] += b;
+        pixels[i+2] += b;
+    }
+    ctx.updatePixels();
+}
+{
+    let width = skyGraphic.width, height = skyGraphic.height;
     
+    for (let i = 0; i < 800; i++) {
+        stars.push([random(0, width), random(0, height), random(0.2, 2), random(-8, 8)]);
+    }
+
     skyGraphic.background(0, 0, 0);
+
     
     skyGraphic.noStroke();
-    for(var i = 0; i < 6000; i++){
-        var s = random(50);
-        skyGraphic.fill(0, 0, 255, 1);
-        skyGraphic.ellipse(random(-10, 410), random(-40, 410), s, s);
+    let c1 = color(0, 0, 0);
+    let c2 = color(64, 5, 115);
+    for (let i = 0; i < height; i++) {
+        skyGraphic.fill(lerpColor(c1, c2, min(i / 500 - 0.35, 1)));
+        skyGraphic.rect(0, i, width, 2);
     }
-    for(var i = 0; i < 6000; i++){
-        var s = random(50);
-        skyGraphic.fill(0, 255, 255, 1);
-        skyGraphic.ellipse(random(-10, 410), random(-40, 410), s, s);
-    }
-    for(var i = 0; i < 6000; i++){
-        var s = random(50);
-        skyGraphic.fill(255, 0, 0, 1);
-        skyGraphic.ellipse(random(-10, 410), random(-40, 410), s, s);
-    }
+
+    drawClouds(skyGraphic);
+
+    // galaxy
+    // Credit: https://www.khanacademy.org/computer-programming/i/4870333859315712
+    skyGraphic.pushMatrix();
+        skyGraphic.translate(50, -50);
+        skyGraphic.rotate(10);
+        skyGraphic.scale(0.8);
     
-    skyGraphic.noFill();
-    for(var s = 600; s > 0; s--){
-        skyGraphic.stroke(0, 150, 255, 70-s/7);
-        skyGraphic.ellipse(200, 175, s, s);
-    }
-    
-    skyGraphic.fill(255, 255, 255);
-    var ss = [1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,3,3,3,5,7,9];
-    for(var i = 0; i < 300; i++){
-        var pos = [random(0, 600), random(-30, 370)];
-        if(dist(pos[0], pos[1], 300, 175) > 170/2){
-            var s = ss[floor(random(0, ss.length-1))];
-            skyGraphic.ellipse(pos[0], pos[1], s, s);
+        for (var i = 0; i < 360; i++) {
+            skyGraphic.pushMatrix();
+            
+            skyGraphic.translate(300,200);
+            skyGraphic.scale(0.6,0.15);
+            skyGraphic.rotate(i);
+            
+            skyGraphic.fill(194, 19, 188,20);
+            skyGraphic.ellipse(random(0,12),random(30,366),120,20);
+            skyGraphic.fill(255, 241, 38,20);
+            skyGraphic.ellipse(random(0,12),random(-200,-5),120,40);
+            skyGraphic.fill(255, 241, 38,200);
+            skyGraphic.ellipse(random(0,12),random(1,0),12,4);
+            skyGraphic.fill(51, 0, 255,20);
+            skyGraphic.translate(0,130);
+            skyGraphic.ellipse(random(0,12),random(0,326),120,40);
+            skyGraphic.fill(255, 255, 255,170);
+            skyGraphic.ellipse(random(0,12),random(0,900),3,3);
+            skyGraphic.fill(255, 255,255,10);
+            skyGraphic.ellipse(random(0,12),random(-500,0),120,40);
+            
+            skyGraphic.popMatrix();
         }
-        
-    }
-skyGraphic.popMatrix();
+    skyGraphic.popMatrix();
+
+    skyBackground = skyGraphic.snip();    
+}
+
 let skyboxPlaneGeometry = new THREE.PlaneGeometry(1000, 1000);
 let skyboxTex = new THREE.CanvasTexture(skyGraphic.canvas);
 let skyboxMat = new THREE.MeshBasicMaterial({ map: skyboxTex, side: THREE.DoubleSide });
-let skybox = [
-    new THREE.Mesh(skyboxPlaneGeometry, skyboxMat), 0, 500,
-    new THREE.Mesh(skyboxPlaneGeometry, skyboxMat), 500, 0,
-    new THREE.Mesh(skyboxPlaneGeometry, skyboxMat), 0, -500,
-    new THREE.Mesh(skyboxPlaneGeometry, skyboxMat), -500, 0,
-];
-for (let i = 0; i < skybox.length; i += 3) {
-    skybox[i].position.x = skybox[i + 1];
-    skybox[i].position.y = 200;
-    skybox[i].position.z = skybox[i + 2];
-    skybox[i].rotation.y = radians(i * 90);
-    scene.add(skybox[i]);
-}
-let roof = new THREE.Mesh(skyboxPlaneGeometry, skyboxMat);
-roof.position.y = 500;
-roof.rotation.x = radians(90);
-skybox.push(roof);
 
-// skyGraphic.canvas to get underlying canvas element
+let skyboxWallData = [
+    0, 500, skyboxMat,
+    500, 0, skyboxMat,
+    0, -500, skyboxMat,
+    -500, 0, skyboxMat,
+    0, 0, skyboxMat
+];
+let skybox = [];
+
+// create skybox
+for (let i = 0; i < skyboxWallData.length / 3; i++) {
+    let x = skyboxWallData[i*3];
+    let z = skyboxWallData[i*3+1];
+    let mat = skyboxWallData[i*3+2];
+    let plane = new THREE.Mesh(skyboxPlaneGeometry, mat);
+
+    // walls
+    plane.position.x = x;
+    plane.position.y = 0;
+    plane.position.z = z;
+    plane.rotation.y = radians(i * 90);
+
+    // roof
+    if (i === 4) {
+        plane.position.y = 500;
+        plane.rotation.x = radians(-90);
+    }
+
+    skybox.push(plane);
+    scene.add(plane);
+}
+
+
+function updateSkybox() {
+    skyGraphic.image(skyBackground, 0, 0);
+
+    // draws the stars
+    for (let i = 0; i < stars.length; i++) {
+        let star = stars[i];
+    
+        skyGraphic.strokeWeight(abs(sin(star[2]) * 2));
+        skyGraphic.stroke(random(80, 175), random(200, 255), random(200, 255));
+        skyGraphic.point(star[0], star[1]);
+        star[2] += star[3];
+    }
+
+    // tell three.js to update texture
+    skyboxTex.needsUpdate = true;
+}
+updateSkybox();
 
 /*************************/
 
-let floorGraphic = createGraphics(400, 400);
-floorGraphic.autoUpdateDynamics();
-floorGraphic.loadPixels();
-let pixels = floorGraphic.get.imageData.data;
-let floorGraphicWidth = floorGraphic.get.width;
-for (let i = 0; i < pixels.length; i += 4) {
-    let x = (i >> 2) % floorGraphicWidth;
-    let y = ((i >> 2) / floorGraphicWidth) | 0;
-    if (x > 200) x = 400 - x;
-    if (y > 200) y = 400 - y;
-    let n = map(perlin.get(x / 100, y / 100), 0, 1, 50, 200);
-    pixels[i] = n;
-    pixels[i+1] = n;
-    pixels[i+2] = n;
-    pixels[i+3] = 255;
+let floorGraphic = createGraphics(4000, 4000);
+{
+    let cubeSz = 4000 / 20;
+    floorGraphic.strokeWeight(40);
+    floorGraphic.stroke(0, 100);
+    for (let x = 0; x < 20; x++) {
+        for (let y = 0; y < 20; y++) {
+            floorGraphic.fill(random(20, 100));
+            floorGraphic.rect(x * cubeSz, y * cubeSz, cubeSz, cubeSz);
+        }    
+    }
 }
-floorGraphic.updatePixels();
 const FLOOR_TEXTURE = new THREE.CanvasTexture(floorGraphic.canvas);
-const FLOOR_MATERIAL = new THREE.MeshLambertMaterial({ map: FLOOR_TEXTURE });
+const FLOOR_MATERIAL_GROUND =  new THREE.MeshPhongMaterial({map: FLOOR_TEXTURE});
 
+var colors = {
+	color: "#191919",
+    edgeColor: "#670eb5"
+}
+
+const FLOOR_MATERIAL =  new THREE.ShaderMaterial({
+  uniforms: {
+    thickness: {
+    	value: 15
+    },
+    color: {
+    	value: new THREE.Color(colors.color)
+    },
+    edgeColor:{
+    	value: new THREE.Color(colors.edgeColor)
+    },
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main()	{
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+    }
+  `,
+  fragmentShader: `
+    
+    varying vec2 vUv;
+    uniform float thickness;
+    uniform vec3 color;
+    uniform vec3 edgeColor;
+   	
+    float edgeFactor(vec2 p){
+    	vec2 grid = abs(fract(p - 0.5) - 0.5) / fwidth(p) / thickness;
+  		return min(grid.x, grid.y);
+    }
+    
+    void main() {
+			
+      float a = clamp(edgeFactor(vUv), 0., 1.);
+      
+      vec3 c = mix(edgeColor, color, a);
+      
+      gl_FragColor = vec4(c, 1.0);
+    }
+  `
+});
 
 // So that each user can look different
 const SKINS = [
@@ -256,7 +364,7 @@ class User {
                 user.canJump = true;
             } else {
                 user.canJump = false;                
-                user.yVel -= 1.0;
+                user.yVel -= 1.2;
             }
 
             if (NOT_KA) {
@@ -264,7 +372,8 @@ class User {
                     token: token,
                     x: user.x,
                     y: user.y,
-                    z: user.z
+                    z: user.z,
+                    yTheta: user.yTheta
                 });
             }
         }
@@ -341,11 +450,14 @@ socket.on("connect", () => {
             if (localPlayer === null) {
                 localPlayer = new User(serverPlayer.name, serverPlayer.x, serverPlayer.y, serverPlayer.z);
                 players.push(localPlayer);
-            } else if (localPlayer !== user) {
+            }
+            
+            if (localPlayer !== user) {
                 // update player
                 localPlayer.x = serverPlayer.x;
                 localPlayer.y = serverPlayer.y;
                 localPlayer.z = serverPlayer.z;
+                localPlayer.yTheta = serverPlayer.yTheta;
             }
         }
     });
@@ -361,7 +473,7 @@ let level = [];
 
 let floorGeo = new THREE.BoxGeometry(1,1,1);
 let floorMat = new THREE.MeshPhongMaterial( {color: 0x222222} ); 
-let floorMesh = new THREE.Mesh( floorGeo, floorMat);
+let floorMesh = new THREE.Mesh( floorGeo, FLOOR_MATERIAL_GROUND);
 scene.add(floorMesh)
 
 const light = new THREE.PointLight(0xffffff,0.6)
@@ -369,7 +481,7 @@ light.position.set(-200, 100, -200);
 light.castShadow = true;
 scene.add(light)
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
 scene.add(ambientLight);
 
 floorMesh.position.set(0, 0, 0);
@@ -394,6 +506,9 @@ for (let z = 0; z < currLevelMap.length; z++) {
                 voxel.scale.x = blockSize;
                 voxel.scale.y = blockSize;
                 voxel.scale.z = blockSize;
+
+                voxel.rotation.x = radians(((Math.random() * 4) | 0) * 90);
+                voxel.rotation.y = radians(((Math.random() * 4) | 0) * 90);
                 
                 scene.add(voxel);
                 level.push(voxel);
@@ -405,18 +520,26 @@ for (let z = 0; z < currLevelMap.length; z++) {
 
 camera.velocity = { x: 0, y: 0, z: 0 };
 
+background(0, 0, 0, 0);
+noFill();
+strokeWeight(1);
+let d = dist(0, 0, width, height);
+for (let i = 0; i < 300; i++) {
+    stroke(0, 50-i/3.5);
+    ellipse(width / 2, height / 2, d-i, d-i);
+}
+let vinegar = snip();
+
 let prevFrameTimestamp = 0;
 frameRate(NATIVE);
-DL.draw = function() {
+DL.draw = function() {    
     let ms = Date.now();
     secondsFromPrevFrame = (ms - prevFrameTimestamp) / 1000;
     prevFrameTimestamp = ms;
 
-    noStroke();
-    fill(255, 128);
-    rect(0, 0, 200, 220);
+    background(0, 0, 0, 0);
 
-    fill(0);
+    fill(255);
     textAlign(LEFT, TOP);
     textSize(18);
     text([
@@ -429,7 +552,12 @@ DL.draw = function() {
         `xTheta: ${user.xTheta.toFixed(2)}`,
         `yTheta: ${user.yTheta.toFixed(2)}`,
         `keys: ${Object.keys(keys).filter(k => keys[k])}`,
+        `fps: ${frameRate()}`,
     ].join("\n"), 8, 8);
+
+    
+
+    image(vinegar, 0, 0);
     
     for (let i = 0; i < PLAYERS.length; i++) {
         PLAYERS[i].move();
@@ -440,23 +568,26 @@ DL.draw = function() {
     camera.velocity.y = (user.y + 2 - camera.position.y) / 10;
     camera.velocity.z = (user.z + sin(user.yTheta) * 5 - camera.position.z) / 5;
 
-    camera.rotation.z += (radians(-user.xTheta + 0) -  camera.rotation.x) / 5;
+    // camera.rotation.x = radians(-user.xTheta + 0)
     camera.rotation.y += (radians(-user.yTheta + 90) -  camera.rotation.y) / 5;
     
     camera.position.x += camera.velocity.x;
     camera.position.y += camera.velocity.y;
     camera.position.z += camera.velocity.z;
 
+    // if (get.frameCount % 2 === 0) {
+        updateSkybox();
+    // }
+    
     renderer.render(scene, camera);
 };
 
 DL.mouseMoved = function(e) {
     if (document.pointerLockElement !== null) {
         user.yTheta += e.movementX * mouseSensitivity;
-        user.xTheta = constrain(user.xTheta - e.movementY * mouseSensitivity, -90, 90);
+        user.xTheta = constrain(user.xTheta - e.movementY * mouseSensitivity, -45, 45);
     }
 };
-
 DL.mousePressed = function() {
     canvas2d.requestPointerLock();
 };
